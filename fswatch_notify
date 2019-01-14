@@ -1,43 +1,51 @@
 #!/usr/bin/env bash
 
-set -e
-
-trap ctrl_c INT
+set -euo pipefail
 
 function ctrl_c() {
     echo "INTERRUPTED"
 }
 
 function print() {
-    osascript -e "display notification \"$1\" with title \"fswatch_notify\""
+    osascript -e "display notification \"${2} (exit=${3})\" with title \"$1\""
 }
 
-function fail() {
-    print "Execution error" "$1"
+
+function usage() {
+cat << EOT
+usage: $0 [file] [command]
+EOT
 }
 
-function done() {
-    print "$1 exited with code $2"
-}
-
-WATCHED='src/main/asciidoc/index.adoc'
-COMMAND='mvn asciidoc:process-doc'
-
-while true; do
-    fswatch -1 -t "$WATCHED" &
-    wait $!
-    
-    if [[ $? != 0 ]]; then
-        break;
-    fi;
-
-    set +e 
-    mvn asciidoc:process-doc
-    if [[ $? != 0 ]]; then
-        fail "$COMMAND"
+function main(){
+    if [ "$#" -lt 3 ]; then
+        usage
+        exit 1
     fi
-    set -e
-
-    break
     
-done
+    WATCHED="$1"
+    shift
+    COMMAND="$@"
+
+    trap ctrl_c INT
+    
+    while true; do
+        echo "$(date) - Watching ${WATCHED}"
+        fswatch -1 -t "$WATCHED" &
+        wait $!
+        
+        if [[ $? != 0 ]]; then
+            break;
+        fi;
+        
+        set +e
+        eval "$COMMAND"
+        local COMMAND_RES=$?
+        set -e
+
+        print "$WATCHED" "$COMMAND" "$COMMAND_RES"
+    done
+}
+
+main "$@"
+
