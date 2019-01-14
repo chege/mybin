@@ -1,0 +1,22 @@
+#! /usr/bin/env bash
+
+display_usage() {
+    echo -e "Usage: $0 [text ...]\n"
+}
+
+if [  $# -le 1 ]
+then
+    display_usage
+    exit 1
+fi
+
+function join { local IFS="$1"; shift; echo "$*"; }
+
+array=()
+
+for var in "$@"
+do
+    array+=("$(echo "$var" | sed -E 's/[[:space:]]+/_/g')")
+done
+
+join _ "${array[@]}"
