@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+import argparse
+import json
+
+
+def load(_file):
+    return json.load(_file)
+
+
+def find_keys(obj, path=""):
+    if isinstance(obj, dict):
+        for k, v in obj.iteritems():
+            for r in find_keys(v, path + "." + k if path else k):
+                yield r
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            s = "[" + str(i) + "]"
+            for r in find_keys(v, path + s if path else s):
+                yield r
+    else:
+        yield path
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Print JSON file(s) using dot notation.',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('file', help="File(s) to convert", type=argparse.FileType('r'), nargs='+')
+    parsed_args = parser.parse_args()
+
+    for _file in parsed_args.file:
+        print "-" * len(_file.name)
+        print _file.name
+        print "-" * len(_file.name)
+        print
+        json_data = load(_file)
+        for key in find_keys(json_data):
+            print key
+        print
+
+
+if __name__ == '__main__':
+    main()

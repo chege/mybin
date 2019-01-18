@@ -21,3 +21,20 @@ Concatenate arguments with underscore in between
 $ toundercore I really need to improve my bash skills
 # echos 'I_really_need_to_improve_my_bash_skills'
 ```
+
+## printjsondot
+Print JSON file(s) using dot notations. 
+
+````bash
+usage: printjsondot [-h] file [file ...]
+````
+
+```bash
+$ printjsondot xanadu/honeydew.json
+```
+prints 
+```
+sacred.river.alph 
+caves[0]ice 
+caves[1]ice 
+```
