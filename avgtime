@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+import timeit
+import argparse
+import subprocess
+import os
+import re
+from halo import Halo
+
+DEVNULL = open(os.devnull, 'w')
+
+
+def execute_statement(statement):
+    subprocess.call(statement, stdout=DEVNULL, stderr=subprocess.STDOUT)
+
+
+def main():
+    parser = argparse.ArgumentParser("Measure execution time")
+    parser.add_argument("-t", type=int, help="number of times to execute command", nargs='?', default=3)
+    parser.add_argument("statement", help="the statement to execute", nargs="+")
+
+    args = parser.parse_args()
+
+    statement_list = re.sub(r'\s{2,}', r' ', ' '.join(args.statement)).split(' ')
+
+    t = timeit.Timer(
+        stmt='execute_statement({})'.format(statement_list),
+        setup="from __main__ import execute_statement"
+    )
+
+    spinner = Halo(text='executing `{}` {} time(s)...'.format(' '.join(statement_list), args.t), spinner='dots')
+
+    try:
+        spinner.start()
+        res = t.timeit(number=args.t)
+        spinner.stop()
+        print "average={}\n".format(res)
+
+    except:
+        t.print_exc()
+        spinner.stop()
+
+
+if __name__ == '__main__':
+    main()
