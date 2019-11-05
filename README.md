@@ -14,6 +14,14 @@ $ fswatch_notify ~/.bashrc source .bashrc
 ```
 
 
+## lower
+Converts the input string to lowercase
+
+```bash
+$ lower JUST BECAUSE I HAVE TO GOOGLE IT
+# echos 'just because i have to google it'
+```
+
 ## tounderscore
 Concatenate arguments with underscore in between
 
