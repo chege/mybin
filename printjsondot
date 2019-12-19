@@ -9,7 +9,7 @@ def load(_file):
 
 def find_keys(obj, path=""):
     if isinstance(obj, dict):
-        for k, v in obj.iteritems():
+        for k, v in obj.items():
             for r in find_keys(v, path + "." + k if path else k):
                 yield r
     elif isinstance(obj, list):
@@ -28,14 +28,14 @@ def main():
     parsed_args = parser.parse_args()
 
     for _file in parsed_args.file:
-        print "-" * len(_file.name)
-        print _file.name
-        print "-" * len(_file.name)
-        print
+        print("-" * len(_file.name))
+        print(_file.name)
+        print("-" * len(_file.name))
+        print()
         json_data = load(_file)
         for key in find_keys(json_data):
-            print key
-        print
+            print(key)
+        print()
 
 
 if __name__ == '__main__':

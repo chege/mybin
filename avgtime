@@ -34,7 +34,8 @@ def main():
         spinner.start()
         res = t.timeit(number=args.t)
         spinner.stop()
-        print "average={}\n".format(res)
+        print('executed `{}` {} time(s)...'.format(' '.join(statement_list), args.t))
+        print("average={}\n".format(res))
 
     except:
         t.print_exc()

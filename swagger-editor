@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+echo "Running swagger-editor on http://localhost:10701"
+docker run -p 10701:8080 swaggerapi/swagger-editor

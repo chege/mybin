@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+from logging import INFO, DEBUG
+from subprocess import check_output
+import re
+import logging
+import coloredlogs
+import argparse
+from collections import namedtuple
+
+logging.basicConfig(level=INFO)
+log = logging.getLogger(__name__)
+coloredlogs.DEFAULT_LOG_FORMAT = '%(asctime)s %(levelname)s %(message)s'
+coloredlogs.install(level=DEBUG, logger=log)
+
+Commit = namedtuple('Commit', 'sha, message')
+
+
+def execute(command):
+    split = command.split(' ')
+    return check_output(split)
+
+
+def git_log(separator, revision_range):
+    return [x.split(separator) for x in
+            execute('git log --format=format:%H{}%s {}'.format(separator, revision_range)).splitlines()]
+
+
+def find_branch_name():
+    return execute('git rev-parse --abbrev-ref HEAD').rstrip('\r\n')
+
+
+def find_prefix(branch_name):
+    search = re.compile(r'^(?:.+/)*((?:[a-zA-Z]{0,4}-)?\d{1,5}).*$').search(branch_name)
+    return search.group(1) if search else None
+
+
+def find_commit_prefix(commit_message):
+    search = re.compile(r'((^\s*[a-zA-Z]{0,4}-)?\d{1,5}):.*').search(commit_message)
+    return search.group() if search else None
+
+
+def prefix(commit, newprefix):
+    print(commit.sha)
+    command = [
+        "git",
+        "filter-branch",
+        "--msg-filter",
+        "'sed \"s/(.*)/{}: \\1/g\"'".format(newprefix),
+        commit.sha
+    ]
+    # print command
+    check_output(
+        command
+    )
+
+
+def create_commit(sha_and_message):
+    return Commit(sha=sha_and_message[0], message=sha_and_message[1])
+
+
+def check_interactive_rebase_in_progress():
+    if 'interactive rebase in progress' in execute('git status'):
+        log.error("interactive rebase in progress")
+        exit(1)
+
+
+def check_state():
+    check_interactive_rebase_in_progress()
+
+
+def main():
+    check_state()
+    parser = argparse.ArgumentParser(description='Prefix commits with jira prefix',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('range', help="revision range", nargs=1)
+    parsed_args = parser.parse_args()
+
+    commits = map(create_commit, git_log('#SEPARATOR#', parsed_args.range[0]))
+    if commits:
+        branch_prefix = find_prefix(find_branch_name())
+
+        if branch_prefix:
+            log.info('Branch prefix:\t{}'.format(branch_prefix))
+            log.info('Commits:\t{}'.format(len(commits)))
+            for commit in commits:
+                existing_prefix = find_prefix(commit.message)
+                if existing_prefix:
+                    if existing_prefix != branch_prefix:
+                        log.warn("Existing prefix '{}' does not match the branch's prefix '{}'"
+                                 .format(existing_prefix, branch_prefix))
+                    else:
+                        log.info("Skipping prefix since it is already prefixed")
+                else:
+                    print("Prefixing {} with '{}'".format(commit, branch_prefix))
+                    prefix(commit, branch_prefix)
+        else:
+            print("Could not find a jira-like prefix in the branch name")
+
+
+if __name__ == '__main__':
+    main()

@@ -4,7 +4,7 @@ display_usage() {
     echo -e "Usage: $0 [text ...]\n"
 }
 
-if [  $# -le 1 ]
+if [  $# -lt 1 ]
 then
     display_usage
     exit 1

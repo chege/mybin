@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [[ -f "$HOME/.at_work" ]]; then
+    echo "activating DEFAULT settings..."
+    networksetup -setdnsservers Wi-Fi 8.8.8.8 8.8.4.4
+    networksetup -getdnsservers Wi-Fi
+    rm "$HOME/.at_work"
+else
+    echo "activating WORK settings..."
+    networksetup -setdnsservers Wi-Fi empty
+    networksetup -getdnsservers Wi-Fi
+    touch "$HOME/.at_work"
+fi
+
+
